@@ -256,58 +256,62 @@ if st.session_state.history:
 if st.session_state.game_over:
 
     st.markdown("---")
-    st.subheader("🏁 Final Ranking")
-
-    ranking = sorted(st.session_state.scores.items(), key=lambda x: x[1])
 
     st.markdown(
         """
-        <style>
-        .final-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            color: white;
-            background-color: #0f172a;
-        }
-        .final-table th, .final-table td {
-            border: 2px solid #94a3b8;
-            padding: 12px;
-        }
-        .final-table th {
-            background-color: #111827;
-        }
-        </style>
+        <div style="
+            text-align:center;
+            font-size:32px;
+            font-weight:bold;
+            margin-bottom:20px;
+            color:white;
+        ">
+            🏁 GAME OVER 🏁
+        </div>
         """,
         unsafe_allow_html=True
     )
 
-    html = "<table class='final-table'>"
-    html += "<tr><th>Rank</th><th>Player</th><th>Score</th></tr>"
+    ranking = sorted(
+        st.session_state.scores.items(),
+        key=lambda x: x[1]
+    )
+
+    html = """
+    <div class='table-container'>
+    <table class='final-table'>
+        <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Final Score</th>
+        </tr>
+    """
+
+    medals = ["🥇", "🥈", "🥉", "🎖️"]
 
     for i, (player, score) in enumerate(ranking, start=1):
 
+        # row colors
         if i == 1:
-            style = "background-color:#22c55e;"
+            style = "background-color:#22c55e; font-weight:bold;"
         elif i == 2:
-            style = "background-color:#60a5fa;"
+            style = "background-color:#3b82f6; font-weight:bold;"
         elif i == 3:
-            style = "background-color:#facc15;"
+            style = "background-color:#eab308; font-weight:bold;"
         else:
-            style = ""
+            style = "background-color:#475569;"
 
         html += f"""
         <tr style="{style}">
-            <td>{i}</td>
+            <td style="font-size:22px;">{medals[i-1]} #{i}</td>
             <td>{player}</td>
             <td>{score}</td>
         </tr>
         """
 
-    html += "</table>"
+    html += "</table></div>"
 
     st.markdown(html, unsafe_allow_html=True)
-
 # -------------------------
 # 🏁 LIVE LEADERBOARD (OPTIONAL)
 # -------------------------
