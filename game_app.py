@@ -3,17 +3,16 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 GLOBAL STYLE (BRIGHTER APP BACKGROUND)
+# 🎨 GLOBAL STYLE (BRIGHTER BACKGROUND)
 # -------------------------
 st.markdown(
     """
     <style>
     .stApp {
-        background-color: #1e293b;  /* 👈 brighter than before (key fix) */
+        background-color: #1e293b;
         color: white;
     }
 
-    /* scroll container */
     .table-container {
         overflow-x: auto;
         width: 100%;
@@ -21,7 +20,6 @@ st.markdown(
         border-radius: 12px;
     }
 
-    /* TABLE (kept darker for contrast) */
     table {
         width: 100%;
         min-width: 650px;
@@ -29,7 +27,7 @@ st.markdown(
         text-align: center;
         color: white;
         font-size: 14px;
-        background-color: #0f172a; /* darker than page for contrast */
+        background-color: #0f172a;
         border-radius: 10px;
         overflow: hidden;
         box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
@@ -37,7 +35,6 @@ st.markdown(
 
     th {
         background-color: #111827;
-        color: white;
         padding: 12px;
         border: 2px solid #94a3b8;
         position: sticky;
@@ -62,7 +59,7 @@ st.markdown(
 )
 
 # -------------------------
-# 🃏 TITLE CARD
+# 🃏 TITLE
 # -------------------------
 st.markdown(
     """
@@ -71,10 +68,8 @@ st.markdown(
         padding: 22px;
         border-radius: 15px;
         text-align: center;
-        color: white;
         font-size: 30px;
         font-weight: bold;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
         margin-bottom: 20px;
     ">
         🃏 14 Game Score Tracker 🃏
@@ -100,6 +95,9 @@ if "history" not in st.session_state:
 
 if "round" not in st.session_state:
     st.session_state.round = 1
+
+if "game_over" not in st.session_state:
+    st.session_state.game_over = False
 
 # -------------------------
 # PLAYER SETUP
@@ -138,61 +136,68 @@ else:
 
     st.markdown("### 🎯 Round Control")
 
-    winner = st.selectbox("🏆 Select Winner", players)
-    round_type = st.selectbox("🎴 Round Type", [100, 150, 200])
-
-    values = {}
-
-    st.write("Enter scores for other players:")
-
-    for p in players:
-        if p != winner:
-            values[p] = st.number_input(p, min_value=0, step=1)
-
     # -------------------------
-    # APPLY ROUND
+    # FREEZE AFTER ROUND 9
     # -------------------------
-    if st.button("Apply Round ➕"):
+    if not st.session_state.game_over:
 
-        if round_type == 100:
-            penalty = -20
-            multiplier = 1
-        elif round_type == 150:
-            penalty = -30
-            multiplier = 1.5
-        else:
-            penalty = -40
-            multiplier = 2
+        winner = st.selectbox("🏆 Select Winner", players)
+        round_type = st.selectbox("🎴 Round Type", [100, 150, 200])
 
-        st.session_state.scores[winner] += penalty
-        st.session_state.scores[winner] -= 100
-        st.session_state.wins[winner] += 1
+        values = {}
+
+        st.write("Enter scores for other players:")
 
         for p in players:
             if p != winner:
-                val = values[p]
+                values[p] = st.number_input(p, min_value=0, step=1)
 
-                if val == round_type:
-                    st.session_state.scores[p] += val
-                else:
-                    st.session_state.scores[p] += val * multiplier
+        if st.button("Apply Round ➕"):
 
-        clean_scores = {
-            p: int(math.ceil(float(v)))
-            for p, v in st.session_state.scores.items()
-        }
+            if round_type == 100:
+                penalty = -20
+                multiplier = 1
+            elif round_type == 150:
+                penalty = -30
+                multiplier = 1.5
+            else:
+                penalty = -40
+                multiplier = 2
 
-        st.session_state.history.append({
-            "Round": st.session_state.round,
-            **clean_scores
-        })
+            st.session_state.scores[winner] += penalty
+            st.session_state.scores[winner] -= 100
+            st.session_state.wins[winner] += 1
 
-        st.session_state.round += 1
+            for p in players:
+                if p != winner:
+                    val = values[p]
+                    if val == round_type:
+                        st.session_state.scores[p] += val
+                    else:
+                        st.session_state.scores[p] += val * multiplier
 
-        st.rerun()
+            clean_scores = {
+                p: int(math.ceil(float(v)))
+                for p, v in st.session_state.scores.items()
+            }
+
+            st.session_state.history.append({
+                "Round": st.session_state.round,
+                **clean_scores
+            })
+
+            st.session_state.round += 1
+
+            if st.session_state.round > 9:
+                st.session_state.game_over = True
+
+            st.rerun()
+
+    else:
+        st.info("🏁 Game finished — see final results below.")
 
 # -------------------------
-# 📊 TABLE
+# 📊 HISTORY TABLE (UNCHANGED)
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -232,7 +237,6 @@ if st.session_state.history:
                 html += f"<td>{val}</td>"
             else:
                 style = ""
-
                 if val == min_score:
                     style = "background-color:#22c55e; font-weight:bold;"
                 elif val == max_score:
@@ -247,14 +251,71 @@ if st.session_state.history:
     st.markdown(html, unsafe_allow_html=True)
 
 # -------------------------
-# 🏁 LEADERBOARD
+# 🏁 FINAL RANKING (AFTER GAME END)
 # -------------------------
-st.markdown("---")
+if st.session_state.game_over:
 
+    st.markdown("---")
+    st.subheader("🏁 Final Ranking")
+
+    ranking = sorted(st.session_state.scores.items(), key=lambda x: x[1])
+
+    st.markdown(
+        """
+        <style>
+        .final-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            color: white;
+            background-color: #0f172a;
+        }
+        .final-table th, .final-table td {
+            border: 2px solid #94a3b8;
+            padding: 12px;
+        }
+        .final-table th {
+            background-color: #111827;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    html = "<table class='final-table'>"
+    html += "<tr><th>Rank</th><th>Player</th><th>Score</th></tr>"
+
+    for i, (player, score) in enumerate(ranking, start=1):
+
+        if i == 1:
+            style = "background-color:#22c55e;"
+        elif i == 2:
+            style = "background-color:#60a5fa;"
+        elif i == 3:
+            style = "background-color:#facc15;"
+        else:
+            style = ""
+
+        html += f"""
+        <tr style="{style}">
+            <td>{i}</td>
+            <td>{player}</td>
+            <td>{score}</td>
+        </tr>
+        """
+
+    html += "</table>"
+
+    st.markdown(html, unsafe_allow_html=True)
+
+# -------------------------
+# 🏁 LIVE LEADERBOARD (OPTIONAL)
+# -------------------------
 if st.session_state.scores:
 
     best = min(st.session_state.scores, key=st.session_state.scores.get)
     worst = max(st.session_state.scores, key=st.session_state.scores.get)
 
+    st.markdown("---")
     st.success(f"🏆 Leader: {best}")
     st.error(f"💀 Last Place: {worst}")
