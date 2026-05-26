@@ -2,7 +2,42 @@ import streamlit as st
 import pandas as pd
 import math
 
-st.title("14 game score tracker")
+# -------------------------
+# 🎨 VISUAL STYLE (DARK GAME UI)
+# -------------------------
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #0f172a;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# -------------------------
+# 🃏 GAME TITLE CARD
+# -------------------------
+st.markdown(
+    """
+    <div style="
+        background: linear-gradient(90deg, #111827, #1f2937);
+        padding: 22px;
+        border-radius: 15px;
+        text-align: center;
+        color: white;
+        font-size: 30px;
+        font-weight: bold;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+    ">
+        🃏 14 Game Score Tracker 🃏
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # -------------------------
 # INIT STATE
@@ -27,14 +62,14 @@ if "round" not in st.session_state:
 # -------------------------
 if not st.session_state.initialized:
 
-    st.subheader("Enter Player Names")
+    st.subheader("🎮 Enter Player Names")
 
     p1 = st.text_input("Player 1")
     p2 = st.text_input("Player 2")
     p3 = st.text_input("Player 3")
     p4 = st.text_input("Player 4")
 
-    if st.button("Start Game"):
+    if st.button("Start Game 🚀"):
 
         if p1 and p2 and p3 and p4:
 
@@ -48,7 +83,7 @@ if not st.session_state.initialized:
             st.rerun()
 
         else:
-            st.warning("Please enter all player names")
+            st.warning("⚠️ Please enter all player names")
 
 # -------------------------
 # MAIN GAME
@@ -57,14 +92,14 @@ else:
 
     players = st.session_state.players
 
-    st.subheader(f"Round {st.session_state.round}")
+    st.markdown("### 🎯 Round Control")
 
-    winner = st.selectbox("Select winner", players)
-    round_type = st.selectbox("Round type", [100, 150, 200])
-
-    values = {}
+    winner = st.selectbox("🏆 Select Winner", players)
+    round_type = st.selectbox("🎴 Round Type", [100, 150, 200])
 
     st.write("Enter scores for other players:")
+
+    values = {}
 
     for p in players:
         if p != winner:
@@ -73,7 +108,7 @@ else:
     # -------------------------
     # APPLY ROUND
     # -------------------------
-    if st.button("Apply Round"):
+    if st.button("Apply Round ➕"):
 
         if round_type == 100:
             penalty = -20
@@ -90,7 +125,7 @@ else:
         st.session_state.scores[winner] -= 100
         st.session_state.wins[winner] += 1
 
-        # other players
+        # other players logic
         for p in players:
             if p != winner:
                 val = values[p]
@@ -100,7 +135,7 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        # save history
+        # save history (rounded up)
         clean_scores = {}
 
         for p, v in st.session_state.scores.items():
@@ -118,44 +153,34 @@ else:
 # -------------------------
 # TABLE DISPLAY
 # -------------------------
-st.subheader("Score Table")
+st.markdown("---")
+st.subheader("📊 Score Table")
 
 if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    # build display names with wins
-    display_names = {}
-    for p in st.session_state.players:
-        display_names[p] = f"{p} ({st.session_state.wins[p]})"
-
-    df.rename(columns=display_names, inplace=True)
-
-    # -------------------------
-    # HIGHLIGHT FUNCTION
-    # -------------------------
+    # highlight best/worst
     def highlight(row):
 
-        values = row.values[1:]  # skip Round
-        min_score = min(values)
-        max_score = max(values)
+        scores = [row[p] for p in st.session_state.players]
+        min_score = min(scores)
+        max_score = max(scores)
 
         styles = []
 
-        for col, val in zip(row.index, row.values):
+        for col in row.index:
 
             if col == "Round":
                 styles.append("")
 
             else:
-                # GREEN = best (lowest score)
+                val = row[col]
+
                 if val == min_score:
                     styles.append("background-color: lightgreen; font-weight: bold")
-
-                # RED = worst (highest score)
                 elif val == max_score:
                     styles.append("background-color: red; color: white")
-
                 else:
                     styles.append("")
 
@@ -164,12 +189,14 @@ if st.session_state.history:
     st.dataframe(df.style.apply(highlight, axis=1))
 
 # -------------------------
-# CURRENT STATUS
+# LEADERBOARD STATUS
 # -------------------------
+st.markdown("---")
+
 if st.session_state.scores:
 
     best = min(st.session_state.scores, key=st.session_state.scores.get)
     worst = max(st.session_state.scores, key=st.session_state.scores.get)
 
-    st.success(f"Leader: {best}")
-    st.error(f"Worst Player: {worst}")
+    st.success(f"🏆 Leader: {best}")
+    st.error(f"💀 Last Place: {worst}")
