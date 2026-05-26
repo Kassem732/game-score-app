@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 VISUAL STYLE
+# 🎨 GLOBAL STYLE (DARK + CENTER FIX)
 # -------------------------
 st.markdown(
     """
@@ -11,6 +11,18 @@ st.markdown(
     .stApp {
         background-color: #0f172a;
         color: white;
+    }
+
+    table {
+        text-align: center !important;
+    }
+
+    th {
+        text-align: center !important;
+    }
+
+    td {
+        text-align: center !important;
     }
     </style>
     """,
@@ -151,7 +163,7 @@ else:
         st.rerun()
 
 # -------------------------
-# TABLE DISPLAY (WITH WINS IN NAME)
+# TABLE DISPLAY
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -160,7 +172,7 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    # rename columns to include wins
+    # rename columns with wins
     renamed = {}
     for p in st.session_state.players:
         renamed[p] = f"{p} ({st.session_state.wins[p]})"
@@ -182,23 +194,27 @@ if st.session_state.history:
         for col in row.index:
 
             if col == "Round":
-                styles.append("")
+                styles.append("text-align:center")
 
             else:
                 val = row[col]
 
                 if val == min_score:
-                    styles.append("background-color: lightgreen; font-weight: bold")
+                    styles.append("background-color: lightgreen; font-weight: bold; text-align:center")
 
                 elif val == max_score:
-                    styles.append("background-color: red; color: white")
+                    styles.append("background-color: red; color: white; text-align:center")
 
                 else:
-                    styles.append("")
+                    styles.append("text-align:center")
 
         return styles
 
-    st.dataframe(df.style.apply(highlight, axis=1))
+    st.dataframe(
+        df.style.apply(highlight, axis=1).set_properties(**{
+            "text-align": "center"
+        })
+    )
 
 # -------------------------
 # LEADERBOARD
