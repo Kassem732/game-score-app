@@ -13,37 +13,50 @@ st.markdown(
         color: white;
     }
 
-    /* make table scrollable on mobile */
+    /* scroll container for mobile */
     .table-container {
         overflow-x: auto;
         width: 100%;
+        border-radius: 12px;
+        padding: 5px;
     }
 
+    /* TABLE */
     table {
         width: 100%;
-        min-width: 600px;
+        min-width: 650px;
         border-collapse: collapse;
         text-align: center;
         color: white;
         font-size: 14px;
+        background-color: #111827; /* 👈 slightly brighter base */
+        border-radius: 10px;
+        overflow: hidden;
     }
 
-    th, td {
-        border: 2px solid #888;   /* 👈 stronger grid lines */
-        padding: 10px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
+    /* HEADER */
     th {
         background-color: #1f2937;
+        color: #ffffff;
+        padding: 12px;
+        border: 2px solid #9ca3af; /* clearer grid */
         position: sticky;
         top: 0;
         z-index: 2;
     }
 
+    /* CELLS */
     td {
-        background-color: #0b1220;
+        background-color: #1e293b; /* 👈 brighter than before */
+        border: 2px solid #9ca3af;  /* stronger grid lines */
+        padding: 10px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    /* hover effect (optional but nice on desktop) */
+    tr:hover td {
+        background-color: #334155;
     }
 
     </style>
@@ -182,7 +195,7 @@ else:
         st.rerun()
 
 # -------------------------
-# 📊 HTML TABLE
+# 📊 TABLE
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -191,21 +204,23 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    renamed = {}
-    for p in st.session_state.players:
-        renamed[p] = f"{p} ({st.session_state.wins[p]})"
+    renamed = {
+        p: f"{p} ({st.session_state.wins[p]})"
+        for p in st.session_state.players
+    }
 
     df.rename(columns=renamed, inplace=True)
 
     score_cols = [c for c in df.columns if c != "Round"]
 
-    html = "<div class='table-container'>"
-    html += "<table><tr>"
+    html = "<div class='table-container'><table><tr>"
 
+    # header
     for col in df.columns:
         html += f"<th>{col}</th>"
     html += "</tr>"
 
+    # rows
     for _, row in df.iterrows():
 
         scores = [row[c] for c in score_cols]
@@ -238,7 +253,7 @@ if st.session_state.history:
     st.markdown(html, unsafe_allow_html=True)
 
 # -------------------------
-# LEADERBOARD
+# 🏁 LEADERBOARD
 # -------------------------
 st.markdown("---")
 
