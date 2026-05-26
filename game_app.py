@@ -5,88 +5,72 @@ import math
 # -------------------------
 # 🎨 GLOBAL STYLE
 # -------------------------
-st.markdown(
-    """
-    <style>
+st.markdown("""
+<style>
 
-    .stApp {
-        background-color: #1e293b;
-        color: white;
-    }
+.stApp {
+    background-color: #1e293b;
+    color: white;
+}
 
-    /* mobile scroll */
-    .table-container {
-        overflow-x: auto;
-        width: 100%;
-        padding: 8px;
-        border-radius: 12px;
-    }
+/* scrollable tables on phone */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+    padding: 8px;
+    border-radius: 12px;
+}
 
-    /* MAIN TABLE */
-    table {
-        width: 100%;
-        min-width: 650px;
-        border-collapse: collapse;
-        text-align: center;
-        color: white;
-        font-size: 14px;
-        background-color: #0f172a;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
-    }
+/* ALL TABLES */
+table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    background-color: #0f172a;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
+}
 
-    th {
-        background-color: #111827;
-        padding: 12px;
-        border: 2px solid #94a3b8;
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        text-align: center;
-    }
+th {
+    background-color: #111827;
+    padding: 12px;
+    border: 2px solid #94a3b8;
+    text-align: center;
+}
 
-    td {
-        background-color: #1f2937;
-        border: 2px solid #94a3b8;
-        padding: 10px;
-        text-align: center;
-        vertical-align: middle;
-    }
+td {
+    background-color: #1f2937;
+    border: 2px solid #94a3b8;
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
 
-    tr:hover td {
-        background-color: #334155;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------
 # 🃏 TITLE
 # -------------------------
-st.markdown(
-    """
-    <div style="
-        background: linear-gradient(90deg, #111827, #1f2937);
-        padding: 22px;
-        border-radius: 15px;
-        text-align: center;
-        font-size: 30px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        color:white;
-        box-shadow:0px 4px 15px rgba(0,0,0,0.4);
-    ">
-        🃏 14 Game Score Tracker 🃏
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="
+    background: linear-gradient(90deg, #111827, #1f2937);
+    padding: 22px;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color:white;
+">
+    🃏 14 Game Score Tracker 🃏
+</div>
+""", unsafe_allow_html=True)
 
 # -------------------------
-# INIT SESSION STATE
+# SESSION STATE
 # -------------------------
 if "initialized" not in st.session_state:
     st.session_state.initialized = False
@@ -149,14 +133,20 @@ else:
     if not st.session_state.game_over:
 
         winner = st.selectbox("🏆 Select Winner", players)
-        round_type = st.selectbox("🎴 Round Type", [100, 150, 200])
+
+        round_type = st.selectbox(
+            "🎴 Round Type",
+            [100, 150, 200]
+        )
 
         values = {}
 
         st.write("Enter scores for other players:")
 
         for p in players:
+
             if p != winner:
+
                 values[p] = st.number_input(
                     p,
                     min_value=0,
@@ -180,7 +170,7 @@ else:
                 penalty = -40
                 multiplier = 2
 
-            # winner
+            # winner logic
             st.session_state.scores[winner] += penalty
             st.session_state.scores[winner] -= 100
             st.session_state.wins[winner] += 1
@@ -197,13 +187,12 @@ else:
                     else:
                         st.session_state.scores[p] += val * multiplier
 
-            # clean scores
-            clean_scores = {
-                p: int(math.ceil(float(v)))
-                for p, v in st.session_state.scores.items()
-            }
+            # save clean scores
+            clean_scores = {}
 
-            # save round history
+            for p, v in st.session_state.scores.items():
+                clean_scores[p] = int(math.ceil(float(v)))
+
             st.session_state.history.append({
                 "Round": st.session_state.round,
                 **clean_scores
@@ -218,13 +207,13 @@ else:
             st.rerun()
 
     # -------------------------
-    # GAME OVER
+    # GAME OVER MESSAGE
     # -------------------------
     else:
-        st.info("🏁 Game finished — final ranking shown below.")
+        st.info("🏁 Game Finished — Final Ranking Below")
 
 # -------------------------
-# 📊 SCORE HISTORY TABLE
+# 📊 SCORE TABLE
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -233,10 +222,10 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    renamed = {
-        p: f"{p} ({st.session_state.wins[p]})"
-        for p in st.session_state.players
-    }
+    renamed = {}
+
+    for p in st.session_state.players:
+        renamed[p] = f"{p} ({st.session_state.wins[p]})"
 
     df.rename(columns=renamed, inplace=True)
 
@@ -275,14 +264,14 @@ if st.session_state.history:
 
                 style = ""
 
-                # BEST
+                # best score
                 if val == min_score:
                     style = """
                     background-color:#22c55e;
                     font-weight:bold;
                     """
 
-                # WORST
+                # worst score
                 elif val == max_score:
                     style = """
                     background-color:#ef4444;
@@ -304,51 +293,37 @@ if st.session_state.game_over:
 
     st.markdown("---")
 
-    st.markdown(
-        """
-        <div style="
-            text-align:center;
-            font-size:34px;
-            font-weight:bold;
-            margin-bottom:20px;
-            color:white;
-        ">
-            🏁 GAME OVER 🏁
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <div style="
+        text-align:center;
+        font-size:34px;
+        font-weight:bold;
+        margin-bottom:20px;
+        color:white;
+    ">
+        🏁 GAME OVER 🏁
+    </div>
+    """, unsafe_allow_html=True)
 
     ranking = sorted(
         st.session_state.scores.items(),
         key=lambda x: x[1]
     )
 
-    html = """
-    <div class='table-container'>
-
-    <table style="
-        width:100%;
-        min-width:500px;
-        border-collapse:collapse;
-        text-align:center;
-        background-color:#0f172a;
-        color:white;
-        box-shadow:0px 4px 15px rgba(0,0,0,0.4);
-    ">
-
-    <tr>
-        <th>Rank</th>
-        <th>Player</th>
-        <th>Final Score</th>
-    </tr>
-    """
-
     medals = ["🥇", "🥈", "🥉", "🎖️"]
+
+    final_html = """
+    <div class='table-container'>
+    <table>
+        <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Final Score</th>
+        </tr>
+    """
 
     for i, (player, score) in enumerate(ranking, start=1):
 
-        # row colors
         if i == 1:
             bg = "#22c55e"
 
@@ -361,11 +336,8 @@ if st.session_state.game_over:
         else:
             bg = "#475569"
 
-        html += f"""
-        <tr style="
-            background-color:{bg};
-            font-weight:bold;
-        ">
+        final_html += f"""
+        <tr style="background-color:{bg}; font-weight:bold;">
 
             <td style="
                 border:2px solid #94a3b8;
@@ -392,9 +364,9 @@ if st.session_state.game_over:
         </tr>
         """
 
-    html += "</table></div>"
+    final_html += "</table></div>"
 
-    st.markdown(html, unsafe_allow_html=True)
+    st.markdown(final_html, unsafe_allow_html=True)
 
 # -------------------------
 # 🏆 LIVE LEADERBOARD
