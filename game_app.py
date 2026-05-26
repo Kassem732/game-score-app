@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 VISUAL STYLE (DARK GAME UI)
+# 🎨 VISUAL STYLE
 # -------------------------
 st.markdown(
     """
@@ -18,7 +18,7 @@ st.markdown(
 )
 
 # -------------------------
-# 🃏 GAME TITLE CARD
+# 🃏 TITLE CARD
 # -------------------------
 st.markdown(
     """
@@ -125,7 +125,7 @@ else:
         st.session_state.scores[winner] -= 100
         st.session_state.wins[winner] += 1
 
-        # other players logic
+        # other players
         for p in players:
             if p != winner:
                 val = values[p]
@@ -151,7 +151,7 @@ else:
         st.rerun()
 
 # -------------------------
-# TABLE DISPLAY
+# TABLE DISPLAY (WITH WINS IN NAME)
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -160,10 +160,20 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    # highlight best/worst
+    # rename columns to include wins
+    renamed = {}
+    for p in st.session_state.players:
+        renamed[p] = f"{p} ({st.session_state.wins[p]})"
+
+    df.rename(columns=renamed, inplace=True)
+
+    # -------------------------
+    # HIGHLIGHT FUNCTION
+    # -------------------------
     def highlight(row):
 
-        scores = [row[p] for p in st.session_state.players]
+        scores = [row[c] for c in row.index if c != "Round"]
+
         min_score = min(scores)
         max_score = max(scores)
 
@@ -179,8 +189,10 @@ if st.session_state.history:
 
                 if val == min_score:
                     styles.append("background-color: lightgreen; font-weight: bold")
+
                 elif val == max_score:
                     styles.append("background-color: red; color: white")
+
                 else:
                     styles.append("")
 
@@ -189,7 +201,7 @@ if st.session_state.history:
     st.dataframe(df.style.apply(highlight, axis=1))
 
 # -------------------------
-# LEADERBOARD STATUS
+# LEADERBOARD
 # -------------------------
 st.markdown("---")
 
