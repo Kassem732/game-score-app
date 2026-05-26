@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 GLOBAL STYLE
+# 🎨 STYLE
 # -------------------------
 st.markdown(
     """
@@ -12,13 +12,28 @@ st.markdown(
         background-color: #0f172a;
         color: white;
     }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        color: white;
+    }
+    th, td {
+        border: 1px solid #444;
+        padding: 12px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    th {
+        background-color: #1f2937;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
 # -------------------------
-# 🃏 TITLE CARD
+# 🃏 TITLE
 # -------------------------
 st.markdown(
     """
@@ -57,6 +72,20 @@ if "history" not in st.session_state:
 if "round" not in st.session_state:
     st.session_state.round = 1
 
+if "game_over" not in st.session_state:
+    st.session_state.game_over = False
+
+# -------------------------
+# RESET GAME
+# -------------------------
+def reset_game():
+    st.session_state.initialized = False
+    st.session_state.scores = {}
+    st.session_state.wins = {}
+    st.session_state.history = []
+    st.session_state.round = 1
+    st.session_state.game_over = False
+
 # -------------------------
 # PLAYER SETUP
 # -------------------------
@@ -86,13 +115,42 @@ if not st.session_state.initialized:
             st.warning("⚠️ Please enter all player names")
 
 # -------------------------
+# GAME OVER SCREEN
+# -------------------------
+elif st.session_state.round > 9 or st.session_state.game_over:
+
+    st.markdown("## 🏁 Game Finished!")
+
+    scores = st.session_state.scores
+
+    # ranking
+    ranking = sorted(scores.items(), key=lambda x: x[1])
+
+    st.markdown("### 🏆 Final Ranking")
+
+    for i, (player, score) in enumerate(ranking, start=1):
+        medal = ""
+        if i == 1:
+            medal = "🥇"
+        elif i == 2:
+            medal = "🥈"
+        elif i == 3:
+            medal = "🥉"
+
+        st.write(f"{medal} {i}. {player} → {score}")
+
+    st.success(f"🏆 Winner: {ranking[0][0]}")
+
+    st.button("🔄 Restart Game", on_click=reset_game)
+
+# -------------------------
 # MAIN GAME
 # -------------------------
 else:
 
     players = st.session_state.players
 
-    st.markdown("### 🎯 Round Control")
+    st.markdown(f"### 🎯 Round {st.session_state.round}/9")
 
     winner = st.selectbox("🏆 Select Winner", players)
     round_type = st.selectbox("🎴 Round Type", [100, 150, 200])
@@ -125,7 +183,7 @@ else:
         st.session_state.scores[winner] -= 100
         st.session_state.wins[winner] += 1
 
-        # other players
+        # others
         for p in players:
             if p != winner:
                 val = values[p]
@@ -136,10 +194,10 @@ else:
                     st.session_state.scores[p] += val * multiplier
 
         # save history
-        clean_scores = {}
-
-        for p, v in st.session_state.scores.items():
-            clean_scores[p] = int(math.ceil(float(v)))
+        clean_scores = {
+            p: int(math.ceil(v))
+            for p, v in st.session_state.scores.items()
+        }
 
         st.session_state.history.append({
             "Round": st.session_state.round,
@@ -151,7 +209,7 @@ else:
         st.rerun()
 
 # -------------------------
-# 📊 HTML TABLE (FULL CONTROL → CENTERING WORKS)
+# TABLE DISPLAY
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -160,7 +218,6 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    # rename with wins
     renamed = {}
     for p in st.session_state.players:
         renamed[p] = f"{p} ({st.session_state.wins[p]})"
@@ -170,34 +227,14 @@ if st.session_state.history:
     score_cols = [c for c in df.columns if c != "Round"]
 
     html = """
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            color: white;
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 12px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        th {
-            background-color: #1f2937;
-        }
-    </style>
-
     <table>
         <tr>
     """
 
-    # header
     for col in df.columns:
         html += f"<th>{col}</th>"
     html += "</tr>"
 
-    # rows
     for _, row in df.iterrows():
 
         scores = [row[c] for c in score_cols]
@@ -212,13 +249,11 @@ if st.session_state.history:
 
             if col == "Round":
                 html += f"<td>{val}</td>"
-
             else:
                 style = ""
 
                 if val == min_score:
                     style = "background-color: lightgreen; font-weight: bold;"
-
                 elif val == max_score:
                     style = "background-color: red; color: white;"
 
@@ -229,16 +264,3 @@ if st.session_state.history:
     html += "</table>"
 
     st.markdown(html, unsafe_allow_html=True)
-
-# -------------------------
-# LEADERBOARD
-# -------------------------
-st.markdown("---")
-
-if st.session_state.scores:
-
-    best = min(st.session_state.scores, key=st.session_state.scores.get)
-    worst = max(st.session_state.scores, key=st.session_state.scores.get)
-
-    st.success(f"🏆 Leader: {best}")
-    st.error(f"💀 Last Place: {worst}")
