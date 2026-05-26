@@ -75,7 +75,6 @@ else:
     # -------------------------
     if st.button("Apply Round"):
 
-        # rules
         if round_type == 100:
             penalty = -20
             multiplier = 1
@@ -91,7 +90,7 @@ else:
         st.session_state.scores[winner] -= 100
         st.session_state.wins[winner] += 1
 
-        # other players logic
+        # other players
         for p in players:
             if p != winner:
                 val = values[p]
@@ -101,20 +100,16 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        # save history (rounded up)
+        # save history
         clean_scores = {}
 
         for p, v in st.session_state.scores.items():
             clean_scores[p] = int(math.ceil(float(v)))
 
-        # store wins separately in history
-        history_row = {
+        st.session_state.history.append({
             "Round": st.session_state.round,
-            **clean_scores,
-            **{f"{p} Wins": st.session_state.wins[p] for p in players}
-        }
-
-        st.session_state.history.append(history_row)
+            **clean_scores
+        })
 
         st.session_state.round += 1
 
@@ -129,34 +124,38 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
+    # build display names with wins
+    display_names = {}
+    for p in st.session_state.players:
+        display_names[p] = f"{p} ({st.session_state.wins[p]})"
+
+    df.rename(columns=display_names, inplace=True)
+
     # -------------------------
     # HIGHLIGHT FUNCTION
     # -------------------------
     def highlight(row):
 
+        values = row.values[1:]  # skip Round
+        min_score = min(values)
+        max_score = max(values)
+
         styles = []
 
-        # extract only score columns (not wins)
-        score_values = [row[p] for p in st.session_state.players]
-
-        min_score = min(score_values)
-        max_score = max(score_values)
-
-        for col in row.index:
+        for col, val in zip(row.index, row.values):
 
             if col == "Round":
                 styles.append("")
 
-            elif "Wins" in col:
-                styles.append("background-color: lightblue; font-weight: bold")
-
             else:
-                val = row[col]
-
+                # GREEN = best (lowest score)
                 if val == min_score:
                     styles.append("background-color: lightgreen; font-weight: bold")
+
+                # RED = worst (highest score)
                 elif val == max_score:
                     styles.append("background-color: red; color: white")
+
                 else:
                     styles.append("")
 
