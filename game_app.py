@@ -5,13 +5,16 @@ import math
 st.title("14 Game Score Tracker")
 
 # -------------------------
-# INIT SESSION STATE
+# INIT STATE
 # -------------------------
 if "initialized" not in st.session_state:
     st.session_state.initialized = False
 
 if "scores" not in st.session_state:
     st.session_state.scores = {}
+
+if "wins" not in st.session_state:
+    st.session_state.wins = {}
 
 if "history" not in st.session_state:
     st.session_state.history = []
@@ -39,6 +42,7 @@ if not st.session_state.initialized:
 
             st.session_state.players = players
             st.session_state.scores = {p: 0 for p in players}
+            st.session_state.wins = {p: 0 for p in players}
             st.session_state.initialized = True
 
             st.rerun()
@@ -55,7 +59,6 @@ else:
 
     st.subheader(f"Round {st.session_state.round}")
 
-    # Winner + round type
     winner = st.selectbox("Select winner", players)
     round_type = st.selectbox("Round type", [100, 150, 200])
 
@@ -83,10 +86,12 @@ else:
             penalty = -40
             multiplier = 2
 
-        # winner penalty
+        # winner rule (NEW)
         st.session_state.scores[winner] += penalty
+        st.session_state.scores[winner] -= 100  # NEW RULE
+        st.session_state.wins[winner] += 1
 
-        # other players logic
+        # other players
         for p in players:
             if p != winner:
                 val = values[p]
@@ -96,27 +101,24 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        # -------------------------
-        # SAVE HISTORY (CLEAN + CEIL)
-        # -------------------------
+        # save history (rounded up)
         clean_scores = {}
 
         for p, v in st.session_state.scores.items():
             clean_scores[p] = int(math.ceil(float(v)))
 
-        st.session_state.history.append(
-            {
-                "Round": st.session_state.round,
-                **clean_scores
-            }
-        )
+        st.session_state.history.append({
+            "Round": st.session_state.round,
+            **clean_scores,
+            **{p + " Wins": st.session_state.wins[p] for p in players}
+        })
 
         st.session_state.round += 1
 
         st.rerun()
 
     # -------------------------
-    # SCORE TABLE
+    # TABLE
     # -------------------------
     st.subheader("Score Table")
 
@@ -124,22 +126,33 @@ else:
 
         df = pd.DataFrame(st.session_state.history)
 
-        # highlight lowest score (winner)
+        # highlight WORST player (highest score = red)
         def highlight(row):
-            scores = row[1:]
-            min_score = scores.min()
-            return ["background-color: lightgreen" if v == min_score else "" for v in row]
+            scores = row[1:1+len(players)]
+            max_score = scores.max()
+
+            styles = []
+
+            for i, col in enumerate(row.index):
+                if col == "Round":
+                    styles.append("")
+                elif col.endswith("Wins"):
+                    styles.append("")
+                else:
+                    if row[col] == max_score:
+                        styles.append("background-color: red; color: white")
+                    else:
+                        styles.append("")
+
+            return styles
 
         st.dataframe(df.style.apply(highlight, axis=1))
 
     # -------------------------
-    # CURRENT WINNER
+    # CURRENT WORST PLAYER
     # -------------------------
     if st.session_state.scores:
 
-        current_winner = min(
-            st.session_state.scores,
-            key=st.session_state.scores.get
-        )
+        worst = max(st.session_state.scores, key=st.session_state.scores.get)
 
-        st.success(f"Current Leader: {current_winner}")
+        st.error(f"Worst Player (Highest Score): {worst}")
