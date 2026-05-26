@@ -12,18 +12,21 @@ st.markdown(
         background-color: #0f172a;
         color: white;
     }
+
     table {
         width: 100%;
         border-collapse: collapse;
         text-align: center;
         color: white;
     }
+
     th, td {
         border: 1px solid #444;
         padding: 12px;
         text-align: center;
         vertical-align: middle;
     }
+
     th {
         background-color: #1f2937;
     }
@@ -72,11 +75,8 @@ if "history" not in st.session_state:
 if "round" not in st.session_state:
     st.session_state.round = 1
 
-if "game_over" not in st.session_state:
-    st.session_state.game_over = False
-
 # -------------------------
-# RESET GAME
+# RESET FUNCTION
 # -------------------------
 def reset_game():
     st.session_state.initialized = False
@@ -84,7 +84,6 @@ def reset_game():
     st.session_state.wins = {}
     st.session_state.history = []
     st.session_state.round = 1
-    st.session_state.game_over = False
 
 # -------------------------
 # PLAYER SETUP
@@ -115,32 +114,33 @@ if not st.session_state.initialized:
             st.warning("⚠️ Please enter all player names")
 
 # -------------------------
-# GAME OVER SCREEN
+# GAME OVER
 # -------------------------
-elif st.session_state.round > 9 or st.session_state.game_over:
+elif st.session_state.round > 9:
 
     st.markdown("## 🏁 Game Finished!")
 
     scores = st.session_state.scores
-
-    # ranking
     ranking = sorted(scores.items(), key=lambda x: x[1])
 
     st.markdown("### 🏆 Final Ranking")
 
     for i, (player, score) in enumerate(ranking, start=1):
-        medal = ""
-        if i == 1:
-            medal = "🥇"
-        elif i == 2:
-            medal = "🥈"
-        elif i == 3:
-            medal = "🥉"
-
+        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else ""
         st.write(f"{medal} {i}. {player} → {score}")
 
-    st.success(f"🏆 Winner: {ranking[0][0]}")
+    # -------------------------
+    # LEADER + WORST
+    # -------------------------
+    best = ranking[0][0]
+    worst = ranking[-1][0]
 
+    st.success(f"🏆 Leader: {best}")
+    st.error(f"💀 Worst Player: {worst}")
+
+    # -------------------------
+    # RESTART BUTTON (FIXED)
+    # -------------------------
     st.button("🔄 Restart Game", on_click=reset_game)
 
 # -------------------------
@@ -218,21 +218,20 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    renamed = {}
-    for p in st.session_state.players:
-        renamed[p] = f"{p} ({st.session_state.wins[p]})"
+    renamed = {
+        p: f"{p} ({st.session_state.wins[p]})"
+        for p in st.session_state.players
+    }
 
     df.rename(columns=renamed, inplace=True)
 
     score_cols = [c for c in df.columns if c != "Round"]
 
-    html = """
-    <table>
-        <tr>
-    """
+    html = "<table><tr>"
 
     for col in df.columns:
         html += f"<th>{col}</th>"
+
     html += "</tr>"
 
     for _, row in df.iterrows():
@@ -251,12 +250,10 @@ if st.session_state.history:
                 html += f"<td>{val}</td>"
             else:
                 style = ""
-
                 if val == min_score:
                     style = "background-color: lightgreen; font-weight: bold;"
                 elif val == max_score:
                     style = "background-color: red; color: white;"
-
                 html += f"<td style='{style}'>{val}</td>"
 
         html += "</tr>"
