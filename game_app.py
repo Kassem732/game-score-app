@@ -12,6 +12,40 @@ st.markdown(
         background-color: #0f172a;
         color: white;
     }
+
+    /* make table scrollable on mobile */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    table {
+        width: 100%;
+        min-width: 600px;
+        border-collapse: collapse;
+        text-align: center;
+        color: white;
+        font-size: 14px;
+    }
+
+    th, td {
+        border: 2px solid #888;   /* 👈 stronger grid lines */
+        padding: 10px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    th {
+        background-color: #1f2937;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    td {
+        background-color: #0b1220;
+    }
+
     </style>
     """,
     unsafe_allow_html=True
@@ -120,12 +154,10 @@ else:
             penalty = -40
             multiplier = 2
 
-        # winner logic
         st.session_state.scores[winner] += penalty
         st.session_state.scores[winner] -= 100
         st.session_state.wins[winner] += 1
 
-        # other players
         for p in players:
             if p != winner:
                 val = values[p]
@@ -135,7 +167,6 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        # save history
         clean_scores = {}
 
         for p, v in st.session_state.scores.items():
@@ -151,7 +182,7 @@ else:
         st.rerun()
 
 # -------------------------
-# 📊 HTML TABLE (FULL CONTROL → CENTERING WORKS)
+# 📊 HTML TABLE
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -160,7 +191,6 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    # rename with wins
     renamed = {}
     for p in st.session_state.players:
         renamed[p] = f"{p} ({st.session_state.wins[p]})"
@@ -169,35 +199,13 @@ if st.session_state.history:
 
     score_cols = [c for c in df.columns if c != "Round"]
 
-    html = """
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            color: white;
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 12px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        th {
-            background-color: #1f2937;
-        }
-    </style>
+    html = "<div class='table-container'>"
+    html += "<table><tr>"
 
-    <table>
-        <tr>
-    """
-
-    # header
     for col in df.columns:
         html += f"<th>{col}</th>"
     html += "</tr>"
 
-    # rows
     for _, row in df.iterrows():
 
         scores = [row[c] for c in score_cols]
@@ -217,16 +225,15 @@ if st.session_state.history:
                 style = ""
 
                 if val == min_score:
-                    style = "background-color: lightgreen; font-weight: bold;"
-
+                    style = "background-color:#22c55e; font-weight:bold;"
                 elif val == max_score:
-                    style = "background-color: red; color: white;"
+                    style = "background-color:#ef4444; color:white;"
 
                 html += f"<td style='{style}'>{val}</td>"
 
         html += "</tr>"
 
-    html += "</table>"
+    html += "</table></div>"
 
     st.markdown(html, unsafe_allow_html=True)
 
