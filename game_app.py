@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 GLOBAL STYLE (DARK + CENTER FIX)
+# 🎨 GLOBAL STYLE (CENTER CELLS PROPERLY)
 # -------------------------
 st.markdown(
     """
@@ -13,16 +13,20 @@ st.markdown(
         color: white;
     }
 
+    /* TRUE CELL CENTERING */
     table {
+        width: 100%;
         text-align: center !important;
     }
 
     th {
         text-align: center !important;
+        vertical-align: middle !important;
     }
 
     td {
         text-align: center !important;
+        vertical-align: middle !important;
     }
     </style>
     """,
@@ -109,9 +113,9 @@ else:
     winner = st.selectbox("🏆 Select Winner", players)
     round_type = st.selectbox("🎴 Round Type", [100, 150, 200])
 
-    st.write("Enter scores for other players:")
-
     values = {}
+
+    st.write("Enter scores for other players:")
 
     for p in players:
         if p != winner:
@@ -147,7 +151,7 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        # save history (rounded up)
+        # save history
         clean_scores = {}
 
         for p, v in st.session_state.scores.items():
@@ -194,25 +198,26 @@ if st.session_state.history:
         for col in row.index:
 
             if col == "Round":
-                styles.append("text-align:center")
+                styles.append("text-align:center; vertical-align:middle")
 
             else:
                 val = row[col]
 
                 if val == min_score:
-                    styles.append("background-color: lightgreen; font-weight: bold; text-align:center")
+                    styles.append("background-color: lightgreen; font-weight: bold; text-align:center; vertical-align:middle")
 
                 elif val == max_score:
-                    styles.append("background-color: red; color: white; text-align:center")
+                    styles.append("background-color: red; color: white; text-align:center; vertical-align:middle")
 
                 else:
-                    styles.append("text-align:center")
+                    styles.append("text-align:center; vertical-align:middle")
 
         return styles
 
     st.dataframe(
         df.style.apply(highlight, axis=1).set_properties(**{
-            "text-align": "center"
+            "text-align": "center",
+            "vertical-align": "middle"
         })
     )
 
