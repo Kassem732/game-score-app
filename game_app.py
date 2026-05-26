@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import math
 
-st.title("14 Game Score Tracker")
+st.title("14 game score tracker")
 
 # -------------------------
 # INIT STATE
@@ -171,5 +171,5 @@ if st.session_state.scores:
     best = min(st.session_state.scores, key=st.session_state.scores.get)
     worst = max(st.session_state.scores, key=st.session_state.scores.get)
 
-    st.success(f"Leader (Best Score): {best}")
+    st.success(f"Leader: {best}")
     st.error(f"Worst Player: {worst}")
