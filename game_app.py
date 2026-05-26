@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 GLOBAL STYLE (CENTER CELLS PROPERLY)
+# 🎨 GLOBAL STYLE
 # -------------------------
 st.markdown(
     """
@@ -11,22 +11,6 @@ st.markdown(
     .stApp {
         background-color: #0f172a;
         color: white;
-    }
-
-    /* TRUE CELL CENTERING */
-    table {
-        width: 100%;
-        text-align: center !important;
-    }
-
-    th {
-        text-align: center !important;
-        vertical-align: middle !important;
-    }
-
-    td {
-        text-align: center !important;
-        vertical-align: middle !important;
     }
     </style>
     """,
@@ -167,7 +151,7 @@ else:
         st.rerun()
 
 # -------------------------
-# TABLE DISPLAY
+# 📊 HTML TABLE (FULL CONTROL → CENTERING WORKS)
 # -------------------------
 st.markdown("---")
 st.subheader("📊 Score Table")
@@ -176,50 +160,75 @@ if st.session_state.history:
 
     df = pd.DataFrame(st.session_state.history)
 
-    # rename columns with wins
+    # rename with wins
     renamed = {}
     for p in st.session_state.players:
         renamed[p] = f"{p} ({st.session_state.wins[p]})"
 
     df.rename(columns=renamed, inplace=True)
 
-    # -------------------------
-    # HIGHLIGHT FUNCTION
-    # -------------------------
-    def highlight(row):
+    score_cols = [c for c in df.columns if c != "Round"]
 
-        scores = [row[c] for c in row.index if c != "Round"]
+    html = """
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            color: white;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #1f2937;
+        }
+    </style>
 
+    <table>
+        <tr>
+    """
+
+    # header
+    for col in df.columns:
+        html += f"<th>{col}</th>"
+    html += "</tr>"
+
+    # rows
+    for _, row in df.iterrows():
+
+        scores = [row[c] for c in score_cols]
         min_score = min(scores)
         max_score = max(scores)
 
-        styles = []
+        html += "<tr>"
 
-        for col in row.index:
+        for col in df.columns:
+
+            val = row[col]
 
             if col == "Round":
-                styles.append("text-align:center; vertical-align:middle")
+                html += f"<td>{val}</td>"
 
             else:
-                val = row[col]
+                style = ""
 
                 if val == min_score:
-                    styles.append("background-color: lightgreen; font-weight: bold; text-align:center; vertical-align:middle")
+                    style = "background-color: lightgreen; font-weight: bold;"
 
                 elif val == max_score:
-                    styles.append("background-color: red; color: white; text-align:center; vertical-align:middle")
+                    style = "background-color: red; color: white;"
 
-                else:
-                    styles.append("text-align:center; vertical-align:middle")
+                html += f"<td style='{style}'>{val}</td>"
 
-        return styles
+        html += "</tr>"
 
-    st.dataframe(
-        df.style.apply(highlight, axis=1).set_properties(**{
-            "text-align": "center",
-            "vertical-align": "middle"
-        })
-    )
+    html += "</table>"
+
+    st.markdown(html, unsafe_allow_html=True)
 
 # -------------------------
 # LEADERBOARD
