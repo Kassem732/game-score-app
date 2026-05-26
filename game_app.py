@@ -62,9 +62,9 @@ else:
     winner = st.selectbox("Select winner", players)
     round_type = st.selectbox("Round type", [100, 150, 200])
 
-    st.write("Enter scores for the other players:")
-
     values = {}
+
+    st.write("Enter scores for other players:")
 
     for p in players:
         if p != winner:
@@ -75,7 +75,6 @@ else:
     # -------------------------
     if st.button("Apply Round"):
 
-        # rules
         if round_type == 100:
             penalty = -20
             multiplier = 1
@@ -86,9 +85,9 @@ else:
             penalty = -40
             multiplier = 2
 
-        # winner rule (NEW)
+        # winner logic
         st.session_state.scores[winner] += penalty
-        st.session_state.scores[winner] -= 100  # NEW RULE
+        st.session_state.scores[winner] -= 100
         st.session_state.wins[winner] += 1
 
         # other players
@@ -101,7 +100,7 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        # save history (rounded up)
+        # save history
         clean_scores = {}
 
         for p, v in st.session_state.scores.items():
@@ -109,50 +108,68 @@ else:
 
         st.session_state.history.append({
             "Round": st.session_state.round,
-            **clean_scores,
-            **{p + " Wins": st.session_state.wins[p] for p in players}
+            **clean_scores
         })
 
         st.session_state.round += 1
 
         st.rerun()
 
+# -------------------------
+# TABLE DISPLAY
+# -------------------------
+st.subheader("Score Table")
+
+if st.session_state.history:
+
+    df = pd.DataFrame(st.session_state.history)
+
+    # build display names with wins
+    display_names = {}
+    for p in st.session_state.players:
+        display_names[p] = f"{p} ({st.session_state.wins[p]})"
+
+    df.rename(columns=display_names, inplace=True)
+
     # -------------------------
-    # TABLE
+    # HIGHLIGHT FUNCTION
     # -------------------------
-    st.subheader("Score Table")
+    def highlight(row):
 
-    if st.session_state.history:
+        values = row.values[1:]  # skip Round
+        min_score = min(values)
+        max_score = max(values)
 
-        df = pd.DataFrame(st.session_state.history)
+        styles = []
 
-        # highlight WORST player (highest score = red)
-        def highlight(row):
-            scores = row[1:1+len(players)]
-            max_score = scores.max()
+        for col, val in zip(row.index, row.values):
 
-            styles = []
+            if col == "Round":
+                styles.append("")
 
-            for i, col in enumerate(row.index):
-                if col == "Round":
-                    styles.append("")
-                elif col.endswith("Wins"):
-                    styles.append("")
+            else:
+                # GREEN = best (lowest score)
+                if val == min_score:
+                    styles.append("background-color: lightgreen; font-weight: bold")
+
+                # RED = worst (highest score)
+                elif val == max_score:
+                    styles.append("background-color: red; color: white")
+
                 else:
-                    if row[col] == max_score:
-                        styles.append("background-color: red; color: white")
-                    else:
-                        styles.append("")
+                    styles.append("")
 
-            return styles
+        return styles
 
-        st.dataframe(df.style.apply(highlight, axis=1))
+    st.dataframe(df.style.apply(highlight, axis=1))
 
-    # -------------------------
-    # CURRENT WORST PLAYER
-    # -------------------------
-    if st.session_state.scores:
+# -------------------------
+# CURRENT STATUS
+# -------------------------
+if st.session_state.scores:
 
-        worst = max(st.session_state.scores, key=st.session_state.scores.get)
+    best = min(st.session_state.scores, key=st.session_state.scores.get)
+    worst = max(st.session_state.scores, key=st.session_state.scores.get)
 
-        st.error(f"Worst Player (Highest Score): {worst}")
+    st.success(f"Leader (Best Score): {best}")
+    st.error(f"Worst Player: {worst}")
