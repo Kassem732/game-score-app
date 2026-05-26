@@ -278,34 +278,79 @@ if st.session_state.game_over:
     )
 
     html = """
-    <div class='table-container'>
-    <table class='final-table'>
-        <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>Final Score</th>
-        </tr>
+    <div style="overflow-x:auto;">
+    <table style="
+        width:100%;
+        min-width:500px;
+        border-collapse:collapse;
+        text-align:center;
+        color:white;
+        background-color:#0f172a;
+        border-radius:10px;
+        overflow:hidden;
+        box-shadow:0px 4px 15px rgba(0,0,0,0.4);
+    ">
+
+    <tr>
+        <th style="
+            padding:12px;
+            border:2px solid #94a3b8;
+            background-color:#111827;
+        ">Rank</th>
+
+        <th style="
+            padding:12px;
+            border:2px solid #94a3b8;
+            background-color:#111827;
+        ">Player</th>
+
+        <th style="
+            padding:12px;
+            border:2px solid #94a3b8;
+            background-color:#111827;
+        ">Final Score</th>
+    </tr>
     """
 
     medals = ["🥇", "🥈", "🥉", "🎖️"]
 
     for i, (player, score) in enumerate(ranking, start=1):
 
-        # row colors
+        # colors for ranks
         if i == 1:
-            style = "background-color:#22c55e; font-weight:bold;"
+            bg = "#22c55e"
         elif i == 2:
-            style = "background-color:#3b82f6; font-weight:bold;"
+            bg = "#3b82f6"
         elif i == 3:
-            style = "background-color:#eab308; font-weight:bold;"
+            bg = "#eab308"
         else:
-            style = "background-color:#475569;"
+            bg = "#475569"
 
         html += f"""
-        <tr style="{style}">
-            <td style="font-size:22px;">{medals[i-1]} #{i}</td>
-            <td>{player}</td>
-            <td>{score}</td>
+        <tr style="background-color:{bg}; font-weight:bold;">
+
+            <td style="
+                padding:12px;
+                border:2px solid #94a3b8;
+                font-size:22px;
+            ">
+                {medals[i-1]} #{i}
+            </td>
+
+            <td style="
+                padding:12px;
+                border:2px solid #94a3b8;
+            ">
+                {player}
+            </td>
+
+            <td style="
+                padding:12px;
+                border:2px solid #94a3b8;
+            ">
+                {score}
+            </td>
+
         </tr>
         """
 
