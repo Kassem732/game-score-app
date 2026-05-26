@@ -3,25 +3,25 @@ import pandas as pd
 import math
 
 # -------------------------
-# 🎨 GLOBAL STYLE
+# 🎨 GLOBAL STYLE (BRIGHTER APP BACKGROUND)
 # -------------------------
 st.markdown(
     """
     <style>
     .stApp {
-        background-color: #0f172a;
+        background-color: #1e293b;  /* 👈 brighter than before (key fix) */
         color: white;
     }
 
-    /* scroll container for mobile */
+    /* scroll container */
     .table-container {
         overflow-x: auto;
         width: 100%;
+        padding: 8px;
         border-radius: 12px;
-        padding: 5px;
     }
 
-    /* TABLE */
+    /* TABLE (kept darker for contrast) */
     table {
         width: 100%;
         min-width: 650px;
@@ -29,36 +29,33 @@ st.markdown(
         text-align: center;
         color: white;
         font-size: 14px;
-        background-color: #111827; /* 👈 slightly brighter base */
+        background-color: #0f172a; /* darker than page for contrast */
         border-radius: 10px;
         overflow: hidden;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
     }
 
-    /* HEADER */
     th {
-        background-color: #1f2937;
-        color: #ffffff;
+        background-color: #111827;
+        color: white;
         padding: 12px;
-        border: 2px solid #9ca3af; /* clearer grid */
+        border: 2px solid #94a3b8;
         position: sticky;
         top: 0;
         z-index: 2;
     }
 
-    /* CELLS */
     td {
-        background-color: #1e293b; /* 👈 brighter than before */
-        border: 2px solid #9ca3af;  /* stronger grid lines */
+        background-color: #1f2937;
+        border: 2px solid #94a3b8;
         padding: 10px;
         text-align: center;
         vertical-align: middle;
     }
 
-    /* hover effect (optional but nice on desktop) */
     tr:hover td {
         background-color: #334155;
     }
-
     </style>
     """,
     unsafe_allow_html=True
@@ -180,10 +177,10 @@ else:
                 else:
                     st.session_state.scores[p] += val * multiplier
 
-        clean_scores = {}
-
-        for p, v in st.session_state.scores.items():
-            clean_scores[p] = int(math.ceil(float(v)))
+        clean_scores = {
+            p: int(math.ceil(float(v)))
+            for p, v in st.session_state.scores.items()
+        }
 
         st.session_state.history.append({
             "Round": st.session_state.round,
@@ -215,12 +212,10 @@ if st.session_state.history:
 
     html = "<div class='table-container'><table><tr>"
 
-    # header
     for col in df.columns:
         html += f"<th>{col}</th>"
     html += "</tr>"
 
-    # rows
     for _, row in df.iterrows():
 
         scores = [row[c] for c in score_cols]
@@ -235,7 +230,6 @@ if st.session_state.history:
 
             if col == "Round":
                 html += f"<td>{val}</td>"
-
             else:
                 style = ""
 
